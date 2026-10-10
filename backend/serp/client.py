@@ -43,13 +43,15 @@ class SerpApiClient:
         search_params = params or {}
         cache_key = cache.generate_key(engine, query, **search_params)
         
-        # 1. Check persistent cache
+        api_key = self.get_effective_key()
+        
+        # 1. Check persistent cache (bypass demo cache if live key is available)
         cached_data = cache.get(cache_key)
         if cached_data:
-            print(f"[SerpCache HIT] {engine}: '{query}'")
-            return self._normalize_results(cached_data, engine, query, is_demo=cached_data.get("_is_demo", False))
-
-        api_key = self.get_effective_key()
+            is_cached_demo = cached_data.get("_is_demo", False)
+            if not (api_key and not force_demo and is_cached_demo):
+                print(f"[SerpCache HIT] {engine}: '{query}'")
+                return self._normalize_results(cached_data, engine, query, is_demo=is_cached_demo)
         sources: List[Source] = []
         is_demo = False
 
@@ -89,7 +91,7 @@ class SerpApiClient:
             elif engine in ["google_maps", "maps"]:
                 req_params["engine"] = "google_maps"
 
-            with httpx.Client(timeout=12.0) as client:
+            with httpx.Client(timeout=10.0) as client:
                 resp = client.get(Config.SERPAPI_BASE_URL, params=req_params)
                 if resp.status_code == 200:
                     data = resp.json()
@@ -141,6 +143,22 @@ class SerpApiClient:
             return SourceType.NEWS
         return SourceType.INDEPENDENT
 
+    def _calculate_source_authority(self, stype: SourceType, domain: str) -> float:
+        d = domain.lower() if domain else ""
+        if stype == SourceType.GOVERNMENT:
+            return 0.95
+        elif stype == SourceType.ACADEMIC:
+            return 0.94
+        elif stype == SourceType.NEWS:
+            return 0.88
+        elif stype == SourceType.COMPANY:
+            return 0.82
+        elif stype == SourceType.UGC:
+            return 0.35
+        if any(h in d for h in ["wikipedia.org", "britannica.com", "reuters.com", "bloomberg.com", "nature.com", "ieee.org", "science.org", "forbes.com", "bbc.com", "cnn.com", "technologyreview.com"]):
+            return 0.92
+        return 0.75
+
     def _normalize_results(self, data: Dict[str, Any], engine: str, query: str, is_demo: bool = False) -> List[Source]:
         sources: List[Source] = []
 
@@ -150,6 +168,7 @@ class SerpApiClient:
                 link = item.get("link", "https://example.com/source")
                 parsed_domain = urlparse(link).netloc or "web.intelligence"
                 stype = self._determine_source_type(parsed_domain, engine)
+                auth_score = self._calculate_source_authority(stype, parsed_domain)
                 sources.append(Source(
                     title=item.get("title", "Untitled Discovery"),
                     url=link,
@@ -159,6 +178,7 @@ class SerpApiClient:
                     source_type=stype,
                     domain=parsed_domain,
                     published_date=item.get("date"),
+                    authority_score=auth_score,
                     is_demo=is_demo
                 ))
             return sources
@@ -169,6 +189,7 @@ class SerpApiClient:
             link = item.get("link", "")
             domain = urlparse(link).netloc
             stype = self._determine_source_type(domain, engine)
+            auth_score = self._calculate_source_authority(stype, domain)
             sources.append(Source(
                 title=item.get("title", "Search Discovery"),
                 url=link,
@@ -178,6 +199,7 @@ class SerpApiClient:
                 source_type=stype,
                 domain=domain,
                 published_date=item.get("date"),
+                authority_score=auth_score,
                 is_demo=is_demo
             ))
 
@@ -195,6 +217,7 @@ class SerpApiClient:
                 source_type=SourceType.NEWS,
                 domain=domain,
                 published_date=item.get("date"),
+                authority_score=0.88,
                 is_demo=is_demo
             ))
 
@@ -213,6 +236,7 @@ class SerpApiClient:
                     source_type=SourceType.ACADEMIC,
                     domain=domain,
                     published_date=item.get("publication_info", {}).get("summary"),
+                    authority_score=0.95,
                     is_demo=is_demo
                 ))
 
@@ -227,6 +251,7 @@ class SerpApiClient:
                 query=query,
                 source_type=SourceType.INDEPENDENT,
                 domain=urlparse(item.get("link", "")).netloc or "shopping.google.com",
+                authority_score=0.70,
                 is_demo=is_demo
             ))
 
@@ -240,7 +265,8 @@ class SerpApiClient:
                 engine="google_maps",
                 query=query,
                 source_type=SourceType.INDEPENDENT,
-                domain="maps.google.com",
+                domain=urlparse(item.get("links", {}).get("website", "")).netloc or "maps.google.com",
+                authority_score=0.75,
                 is_demo=is_demo
             ))
 

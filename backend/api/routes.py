@@ -47,7 +47,7 @@ def update_settings(req: SettingsRequest):
     if req.serpapi_key is not None:
         Config.RUNTIME_SERPAPI_KEY = req.serpapi_key.strip()
     if req.gemini_key is not None:
-        Config.RUNTIME_GEMINI_KEY = req.gemini_key.strip()
+        Config.RUNTIME_GEMINI_API_KEY = req.gemini_key.strip()
     return {
         "success": True,
         "has_serpapi_key": Config.has_serpapi_key(),

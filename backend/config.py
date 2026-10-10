@@ -33,11 +33,13 @@ class Config:
         
     @classmethod
     def has_serpapi_key(cls) -> bool:
-        return bool(cls.get_serpapi_key().strip())
+        key = cls.get_serpapi_key().strip()
+        return bool(key) and key != "your_serpapi_key_here"
         
     @classmethod
     def has_gemini_key(cls) -> bool:
-        return bool(cls.get_gemini_key().strip())
+        key = cls.get_gemini_key().strip()
+        return bool(key) and key != "your_gemini_key_here"
 
 # Ensure cache dirs exist
 Config.DATA_DIR.mkdir(parents=True, exist_ok=True)

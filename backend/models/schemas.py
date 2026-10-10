@@ -245,6 +245,9 @@ class IntelligenceReport(BaseModel):
     contradicting_evidence: List[Dict[str, Any]] = Field(default_factory=list)
     what_remains_uncertain: List[str] = Field(default_factory=list)
     recommended_next_investigation: List[str] = Field(default_factory=list)
+    tldr: Optional[str] = None
+    verdict_category: Optional[str] = "VERIFIED"
+    quick_stats: Optional[List[Dict[str, str]]] = Field(default_factory=list)
 
 class IntentDetection(BaseModel):
     detected_mode: InvestigationMode

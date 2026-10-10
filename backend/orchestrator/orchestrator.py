@@ -215,12 +215,13 @@ class SerpentOrchestrator:
         investigation.trail = trail
 
         # 10. Execute Pillar-Specific Engines
+        discovered_entity_names = [e.name for e in entities]
         if investigation.mode in [InvestigationMode.INTELLIGENCE, InvestigationMode.AUTO]:
-            investigation.competitive_radar = WarRoomEngine.generate_competitive_radar(req.query)
+            investigation.competitive_radar = WarRoomEngine.generate_competitive_radar(req.query, discovered_entity_names)
 
         if investigation.mode in [InvestigationMode.TRACE, InvestigationMode.INTELLIGENCE, InvestigationMode.AUTO]:
             investigation.timeline = TimeMachineEngine.construct_timeline(req.query)
-            investigation.period_comparison = TimeMachineEngine.compare_periods("2024", "2026")
+            investigation.period_comparison = TimeMachineEngine.compare_periods("2024", "2026", query=req.query)
 
         if investigation.mode in [InvestigationMode.MISSION]:
             mission = MissionControlEngine.generate_mission_plan(

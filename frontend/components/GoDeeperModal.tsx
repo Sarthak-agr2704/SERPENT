@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Search, Sparkles, ArrowRight, ShieldCheck, Compass, HelpCircle } from "lucide-react";
+import { X, Search, Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
 import { goDeeper } from "@/lib/api";
 
 interface GoDeeperModalProps {
@@ -35,70 +35,71 @@ export default function GoDeeperModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-xl rounded-2xl border border-emerald-900/60 bg-[#0c0e14] p-6 shadow-2xl relative font-mono space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-xl rounded-sm border border-[rgba(198,169,107,0.35)] bg-[#0b0c09] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.9)] relative space-y-5">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+          className="absolute top-4 right-4 text-[#ddd3bb] hover:text-[var(--gold)] text-2xl font-light leading-none p-1 transition"
+          aria-label="Close modal"
         >
-          <X className="w-5 h-5" />
+          ×
         </button>
 
         <div className="flex items-center space-x-3 mb-2">
-          <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-emerald-400">
+          <div className="p-2 rounded-sm bg-[rgba(198,169,107,0.12)] border border-[rgba(198,169,107,0.3)] text-[var(--gold)]">
             <Search className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-emerald-400 uppercase tracking-widest font-semibold block">
+            <span className="text-[9px] font-mono tracking-[0.2em] text-[var(--gold)] uppercase block">
               DIGITAL DETECTIVE • SECOND-ORDER DRILLDOWN
             </span>
-            <h2 className="text-base font-bold text-white font-mono">
+            <h2 className="text-2xl font-serif font-medium text-[#f0e4c4]">
               Investigating "{entityName}"
             </h2>
           </div>
         </div>
 
         {loading ? (
-          <div className="py-12 text-center text-xs text-slate-400 space-y-2">
-            <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="py-12 text-center text-xs font-mono text-[#898678] space-y-3">
+            <div className="w-6 h-6 border-2 border-[var(--gold)] border-t-transparent rounded-full animate-spin mx-auto" />
             <p>Tracing second-order relationships, patents, and supply chains...</p>
           </div>
         ) : drilldownData ? (
-          <div className="space-y-4 text-xs">
+          <div className="space-y-4 text-xs font-mono">
             {/* Causal Analysis */}
-            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
-              <span className="text-emerald-400 font-semibold uppercase text-[11px] block">
+            <div className="p-4 rounded-sm bg-[rgba(5,6,5,0.8)] border border-[rgba(210,191,143,0.18)] space-y-2">
+              <span className="text-[var(--gold)] font-medium uppercase text-[10px] tracking-wider block">
                 Evidence vs Inference Analysis:
               </span>
-              <p className="text-slate-300 font-sans leading-relaxed">
+              <p className="text-[#ded7c5] font-sans text-xs leading-relaxed">
                 {drilldownData.causality_analysis}
               </p>
             </div>
 
             {/* Secondary Questions Uncovered */}
             <div className="space-y-2">
-              <span className="text-slate-400 font-semibold block uppercase text-[11px]">
+              <span className="text-[#a6a193] font-medium block uppercase text-[10px] tracking-wider">
                 Key Second-Order Trail Questions:
               </span>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {drilldownData.secondary_questions?.map((q: string, i: number) => (
                   <div
                     key={i}
-                    className="p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-slate-300 flex items-start gap-2"
+                    className="p-3 rounded-sm bg-[rgba(12,14,11,0.6)] border border-[rgba(210,191,143,0.12)] text-[#ded7c5] flex items-start gap-2.5"
                   >
-                    <span className="text-emerald-400 font-bold shrink-0">{i + 1}.</span>
-                    <span>{q}</span>
+                    <span className="text-[var(--gold)] font-bold shrink-0">{i + 1}.</span>
+                    <span className="font-sans text-xs">{q}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Recommended Target Queries */}
-            <div className="space-y-2 pt-2 border-t border-slate-800">
-              <span className="text-slate-400 font-semibold block uppercase text-[11px]">
+            <div className="space-y-2 pt-2 border-t border-[rgba(210,191,143,0.12)]">
+              <span className="text-[#a6a193] font-medium block uppercase text-[10px] tracking-wider">
                 Deploy Follow-Up Investigation:
               </span>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {drilldownData.recommended_queries?.map((queryStr: string, idx: number) => (
                   <button
                     key={idx}
@@ -107,11 +108,11 @@ export default function GoDeeperModal({
                       onLaunchNewQuery?.(queryStr);
                       onClose();
                     }}
-                    className="w-full text-left p-2.5 rounded-lg border border-emerald-900/50 hover:border-emerald-500/60 bg-emerald-950/20 hover:bg-emerald-900/40 text-emerald-300 text-xs transition flex items-center justify-between group"
+                    className="w-full text-left p-3 rounded-sm border border-[rgba(198,169,107,0.25)] hover:border-[var(--gold)] bg-[rgba(198,169,107,0.06)] hover:bg-[rgba(198,169,107,0.15)] text-[#f0e4c4] text-xs transition flex items-center justify-between group"
                   >
-                    <span>"{queryStr}"</span>
-                    <span className="text-emerald-400 text-[11px] group-hover:translate-x-1 transition-transform">
-                      Investigate →
+                    <span className="font-serif">"{queryStr}"</span>
+                    <span className="text-[var(--gold)] text-[10px] font-mono tracking-wider group-hover:translate-x-1 transition-transform">
+                      INVESTIGATE →
                     </span>
                   </button>
                 ))}
@@ -120,13 +121,13 @@ export default function GoDeeperModal({
           </div>
         ) : null}
 
-        <div className="flex justify-end pt-2">
+        <div className="flex justify-end pt-3 border-t border-[rgba(210,191,143,0.12)]">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl border border-slate-800 hover:bg-slate-900 text-xs font-mono text-slate-300 transition"
+            className="px-5 py-2 rounded-full border border-[rgba(210,191,143,0.2)] hover:border-[rgba(210,191,143,0.4)] text-[10px] font-mono tracking-wider text-[#a6a193] transition"
           >
-            Close
+            CLOSE
           </button>
         </div>
       </div>

@@ -222,6 +222,9 @@ export interface IntelligenceReport {
   contradicting_evidence: Array<Record<string, any>>;
   what_remains_uncertain: string[];
   recommended_next_investigation: string[];
+  tldr?: string;
+  verdict_category?: string;
+  quick_stats?: Array<{ label: string; value: string; type?: string }>;
 }
 
 export interface IntentDetection {

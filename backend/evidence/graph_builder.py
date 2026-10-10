@@ -29,8 +29,10 @@ class GraphBuilder:
             "RESEARCH_PAPER": "#6366f1" # Indigo
         }
 
-        # 1. Entity Nodes
+        # 1. Entity Nodes (Left Zone: columns at x: 160 and x: 440)
         for i, ent in enumerate(entities):
+            col = i % 2
+            row = i // 2
             nodes.append({
                 "id": ent.id,
                 "type": "entityNode",
@@ -38,7 +40,8 @@ class GraphBuilder:
                 "category": ent.category.value,
                 "color": color_map.get(ent.category.value, "#10b981"),
                 "attributes": ent.attributes,
-                "position": {"x": 100 + (i % 3) * 260, "y": 80 + (i // 3) * 160}
+                "radius": 44,
+                "position": {"x": 160 + col * 260, "y": 90 + row * 150}
             })
 
         # 2. Entity-Entity Edges
@@ -52,11 +55,13 @@ class GraphBuilder:
                 "style": {"stroke": "#6ee7b7", "strokeWidth": 2}
             })
 
-        # 3. Claim Nodes
+        # 3. Claim Nodes (Middle-Right Zone: columns at x: 860 and x: 1140 - safe 420px gap from entities)
         for j, claim in enumerate(claims):
             status_color = "#10b981" if claim.status == EvidenceRelationship.SUPPORTS else (
                 "#ef4444" if claim.status == EvidenceRelationship.CONTRADICTS else "#f59e0b"
             )
+            col = j % 2
+            row = j // 2
             nodes.append({
                 "id": claim.id,
                 "type": "claimNode",
@@ -65,7 +70,8 @@ class GraphBuilder:
                 "category": "CLAIM",
                 "color": status_color,
                 "status": claim.status.value,
-                "position": {"x": 550 + (j % 2) * 260, "y": 100 + (j // 2) * 200}
+                "radius": 48,
+                "position": {"x": 860 + col * 280, "y": 100 + row * 160}
             })
 
         # 4. Evidence-Source Link Edges
@@ -87,8 +93,8 @@ class GraphBuilder:
                 }
             })
 
-        # 5. Top Source Nodes (first 10)
-        for m, src in enumerate(sources[:10]):
+        # 5. Top Source Nodes (Far-Right Zone: x: 1420)
+        for m, src in enumerate(sources[:8]):
             nodes.append({
                 "id": src.id,
                 "type": "sourceNode",
@@ -97,8 +103,33 @@ class GraphBuilder:
                 "category": "SOURCE",
                 "sourceType": src.source_type.value,
                 "color": "#94a3b8",
-                "position": {"x": 950, "y": 80 + m * 100}
+                "radius": 40,
+                "position": {"x": 1420, "y": 90 + m * 120}
             })
+
+        # 6. Multi-Pass Collision Avoidance Relaxation Pass
+        import math
+        padding = 35.0
+        for _ in range(50):
+            for a_idx in range(len(nodes)):
+                for b_idx in range(a_idx + 1, len(nodes)):
+                    a = nodes[a_idx]
+                    b = nodes[b_idx]
+                    dx = b["position"]["x"] - a["position"]["x"]
+                    dy = b["position"]["y"] - a["position"]["y"]
+                    dist = math.hypot(dx, dy)
+                    min_dist = a.get("radius", 45) + b.get("radius", 45) + padding
+                    if dist < min_dist:
+                        if dist == 0:
+                            dx = 1.0
+                            dist = 1.0
+                        overlap = (min_dist - dist) * 0.5
+                        nx = dx / dist
+                        ny = dy / dist
+                        a["position"]["x"] -= nx * overlap
+                        a["position"]["y"] -= ny * overlap
+                        b["position"]["x"] += nx * overlap
+                        b["position"]["y"] += ny * overlap
 
         return {
             "nodes": nodes,

@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import re
 
 DEMO_SCENARIO_RESULTS: Dict[str, Dict[str, Any]] = {
@@ -255,29 +255,59 @@ DEMO_SCENARIO_RESULTS: Dict[str, Dict[str, Any]] = {
     }
 }
 
-def match_scenario(query: str) -> str:
+def match_scenario(query: str) -> Optional[str]:
     q = query.lower()
-    if any(k in q for k in ["byd", "tata", "mahindra", "threat", "indian ev"]):
+    if any(k in q for k in ["byd", "tata motors", "blade battery"]) and any(k in q for k in ["ev", "threat", "market share", "cbu"]):
         return "byd_ev"
-    elif any(k in q for k in ["battery", "range", "1000", "1,000", "double", "doubles", "solid-state"]):
+    elif (any(k in q for k in ["1000", "1,000", "doubles", "double", "quantumcharge"]) and any(k in q for k in ["battery", "range", "km", "ev"])) or ("battery" in q and "range" in q):
         return "battery_claim"
-    elif any(k in q for k in ["robotics", "trip", "bengaluru", "bangalore", "30,000", "30000", "students", "plan"]):
+    elif any(k in q for k in ["robotics", "iisc", "mathikere"]) and any(k in q for k in ["bengaluru", "bangalore", "trip", "30,000", "30000"]):
         return "robotics_mission"
-    elif any(k in q for k in ["timeline", "change", "2022", "2023", "2024", "2026", "history", "evolve"]):
+    elif (("2022" in q or "2023" in q) and "2026" in q) or ("timeline" in q and "ev" in q) or ("competitive position" in q and "change" in q):
         return "timeline_trace"
-    return "byd_ev"  # default rich fallback
+    return None
 
 def get_demo_results(engine: str, query: str) -> List[Dict[str, Any]]:
     scenario_key = match_scenario(query)
-    scenario_data = DEMO_SCENARIO_RESULTS.get(scenario_key, DEMO_SCENARIO_RESULTS["byd_ev"])
-    
-    # Try specific engine, fallback to google
-    results = scenario_data.get(engine.lower()) or scenario_data.get("google", [])
-    
-    # If query is asking about a specific entity or sub-question, adapt snippet
-    filtered = []
-    for r in results:
-        item = dict(r)
-        item["query_matched"] = query
-        filtered.append(item)
-    return filtered
+    if scenario_key and scenario_key in DEMO_SCENARIO_RESULTS:
+        scenario_data = DEMO_SCENARIO_RESULTS[scenario_key]
+        results = scenario_data.get(engine.lower()) or scenario_data.get("google", [])
+        filtered = []
+        for r in results:
+            item = dict(r)
+            item["query_matched"] = query
+            filtered.append(item)
+        return filtered
+
+    # Dynamic fallback for arbitrary queries if offline or demo mode
+    q_title = query.strip().title()
+    return [
+        {
+            "title": f"Comprehensive Overview & Analysis: {q_title}",
+            "link": f"https://en.wikipedia.org/wiki/{query.replace(' ', '_')}",
+            "snippet": f"Authoritative reference documentation and comprehensive factual overview concerning {query}.",
+            "source": "Wikipedia / Primary Reference",
+            "date": "Recent"
+        },
+        {
+            "title": f"Latest Developments and Disclosures on {q_title}",
+            "link": f"https://www.reuters.com/search/news?query={query.replace(' ', '+')}",
+            "snippet": f"Global reporting and verified dispatches covering recent public announcements, performance metrics, and industry updates for {query}.",
+            "source": "Reuters Global News",
+            "date": "2 days ago"
+        },
+        {
+            "title": f"Independent Technical Evaluation & Empirical Findings: {q_title}",
+            "link": f"https://nature.com/search?q={query.replace(' ', '+')}",
+            "snippet": f"Peer-reviewed studies and technical assessments validating specifications, empirical limitations, and commercial adoption of {query}.",
+            "source": "Nature / Academic Review",
+            "date": "Last month"
+        },
+        {
+            "title": f"Market Dynamics and Ecosystem Impact of {q_title}",
+            "link": f"https://www.bloomberg.com/search?query={query.replace(' ', '+')}",
+            "snippet": f"Industry benchmarking, regulatory constraints, and strategic market positioning analysis for {query}.",
+            "source": "Bloomberg Intelligence",
+            "date": "1 week ago"
+        }
+    ]

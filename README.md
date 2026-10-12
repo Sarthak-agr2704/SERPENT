@@ -252,6 +252,30 @@ npm run dev -- -p 3000
 
 ---
 
+### Deploy Backend to Render:
+
+#### Option A: 1-Click Blueprint Deploy
+1. Push your repository to GitHub.
+2. In the [Render Dashboard](https://dashboard.render.com/), click **New +** > **Blueprint**.
+3. Connect your repository. Render automatically reads [`render.yaml`](file:///render.yaml) and configures the service.
+4. (Optional) Provide your `SERPAPI_KEY` and `GEMINI_API_KEY` in the environment variables prompt.
+
+#### Option B: Manual Web Service
+1. In Render, select **New +** > **Web Service**.
+2. Connect your repository.
+3. Configure settings:
+   * **Language / Runtime:** `Python 3`
+   * **Build Command:** `pip install -r requirements.txt`
+   * **Start Command:** `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
+   * **Health Check Path:** `/health`
+4. Under **Environment Variables**, add:
+   * `PYTHON_VERSION`: `3.11.9`
+   * `ALLOWED_ORIGINS`: `*` (or your frontend deployment URL)
+   * `SERPAPI_KEY`: *(your SerpApi key)*
+   * `GEMINI_API_KEY`: *(optional Gemini key)*
+
+---
+
 ## 12. Running Tests
 
 Run the full automated test suite covering all 6 pillars and end-to-end scenarios:

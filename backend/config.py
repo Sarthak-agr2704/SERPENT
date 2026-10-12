@@ -12,8 +12,8 @@ class Config:
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     
     BASE_DIR = Path(__file__).resolve().parent.parent
-    DATA_DIR = BASE_DIR / "database"
-    CACHE_DIR = DATA_DIR / "cache"
+    DATA_DIR = Path(os.getenv("DATA_DIR", str(BASE_DIR / "database")))
+    CACHE_DIR = Path(os.getenv("CACHE_DIR", str(DATA_DIR / "cache")))
     
     DEFAULT_SEARCH_BUDGET: int = 20
     CACHE_TTL_SECONDS: int = 86400 * 7  # 7 days for research caching
@@ -41,6 +41,9 @@ class Config:
         key = cls.get_gemini_key().strip()
         return bool(key) and key != "your_gemini_key_here"
 
-# Ensure cache dirs exist
-Config.DATA_DIR.mkdir(parents=True, exist_ok=True)
-Config.CACHE_DIR.mkdir(parents=True, exist_ok=True)
+# Ensure cache dirs exist safely
+try:
+    Config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+    Config.CACHE_DIR.mkdir(parents=True, exist_ok=True)
+except Exception as e:
+    print(f"[Warning] Failed to initialize database directory: {e}")
